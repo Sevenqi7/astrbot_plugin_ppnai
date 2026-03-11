@@ -20,7 +20,7 @@ from .llm_schema import (
     STNaiGenerateImageMultiRoleArgs,
     STNaiGenerateImageVibeTransferArgs,
 )
-from .llm_utils import apply_regex_replacements, format_readable_error
+from .llm_utils import apply_regex_replacements, format_readable_error, deduplicate_tags
 from .models import Req, ReqAdditionMultiRole
 from .image_io import resolve_image
 from .params import complete_defaults, post_check_limits
@@ -93,19 +93,21 @@ async def llm_generate_prepare_req(
     try:
         data = {}
 
-        # 构建正向提示词：如果 AI 生成的提示词为空且未跳过默认，则用默认提示词；否则用 AI 生成的
+        # 构建正向提示词：如果 AI 生成的提示词为空且未跳过默认，则用默认提示词；否则合并并去重
         ai_tag = args.prompt.strip()
-        if not ai_tag and not skip_default_prompts:
-            data["tag"] = config.llm.default_prompt
+        if not skip_default_prompts and config.llm.default_prompt:
+            combined = f"{config.llm.default_prompt}, {ai_tag}" if ai_tag else config.llm.default_prompt
+            data["tag"] = deduplicate_tags(combined)
         else:
-            data["tag"] = ai_tag
+            data["tag"] = deduplicate_tags(ai_tag)
 
-        # 构建反向提示词：如果 AI 生成的反向提示词为空且未跳过默认，则用默认反向提示词；否则用 AI 生成的
+        # 构建反向提示词：如果 AI 生成的反向提示词为空且未跳过默认，则用默认反向提示词；否则合并并去重
         ai_negative = args.additional_negative_prompt.strip()
-        if not ai_negative and not skip_default_prompts:
-            data["negative"] = config.llm.default_negative_prompt
+        if not skip_default_prompts and config.llm.default_negative_prompt:
+            combined_neg = f"{config.llm.default_negative_prompt}, {ai_negative}" if ai_negative else config.llm.default_negative_prompt
+            data["negative"] = deduplicate_tags(combined_neg)
         else:
-            data["negative"] = ai_negative
+            data["negative"] = deduplicate_tags(ai_negative)
 
         data["size"] = get_size_from_config(config, args.orientation)
 
