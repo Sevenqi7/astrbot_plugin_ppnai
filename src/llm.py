@@ -45,12 +45,14 @@ def get_size_from_config(config: Config, orientation: OrientationType) -> str:
 class ConfigNeededTool(FunctionTool[AstrAgentContext]):
     config_init: Config | None = None
     client_getter_init: Any | None = None
+    token_getter_init: Any | None = None
 
     def __post_init__(self):
         if not self.config_init:
             raise ValueError("config not provided")
         self.config = self.config_init
         self.client_getter = self.client_getter_init
+        self.token_getter = self.token_getter_init
 
 
 class ReturnToLLMError(Exception):

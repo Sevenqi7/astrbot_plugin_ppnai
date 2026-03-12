@@ -424,6 +424,7 @@ class STNaiGenerateImageTool(ConfigNeededTool):
         try:
             # 在指令前添加"画一张图"
             instructions_with_prefix = f"画一张图\n\n{args.instructions}"
+            token = self.token_getter() if getattr(self, "token_getter", None) else ""
             image = await llm_generate_image(
                 instructions_with_prefix,
                 self.config,
@@ -432,6 +433,7 @@ class STNaiGenerateImageTool(ConfigNeededTool):
                 i2i_image,
                 vibe_transfer_images,
                 vision_images=vision_images,
+                token=token,
                 client_getter=self.client_getter,
             )
         except ReturnToLLMError as e:
@@ -503,6 +505,7 @@ class Plugin(Star):
             STNaiGenerateImageTool(
                 config_init=self.config,
                 client_getter_init=self.get_http_client,
+                token_getter_init=self._get_next_token,
             )
         )
 
