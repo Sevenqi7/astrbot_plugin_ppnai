@@ -39,3 +39,20 @@ def format_readable_error(exc: Exception) -> str:
         e_li.append(f"{'Caused by: ' if e_li else ''}{type(e).__name__}: {msg}")
         e = e.__cause__
     return "\n".join(e_li)
+
+
+def deduplicate_tags(tags_str: str) -> str:
+    """Split by comma, strip whitespace, and keep only the first occurrence of each tag."""
+    if not tags_str:
+        return ""
+    seen: set[str] = set()
+    result: list[str] = []
+    for tag in tags_str.split(','):
+        tag = tag.strip()
+        if not tag:
+            continue
+        tag_lower = tag.lower()
+        if tag_lower not in seen:
+            seen.add(tag_lower)
+            result.append(tag)
+    return ", ".join(result)

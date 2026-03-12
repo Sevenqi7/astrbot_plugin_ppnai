@@ -46,6 +46,7 @@ from .image_io import (
     resolve_image,
     resolve_image_as_jpeg,
 )
+from .llm_utils import deduplicate_tags
 
 if TYPE_CHECKING:
     from .config import Config
@@ -833,6 +834,8 @@ async def end_process(data: dict[str, Any], ctx: "Config", **_):
     
     # 拼接正向提示词：prepend_tag + tag + append_tag
     tag_parts = []
+    if ctx.defaults.prompt:
+        tag_parts.append(ctx.defaults.prompt)
     if prepend_tag:
         tag_parts.append(prepend_tag)
     if data.get("tag", "").strip():
@@ -840,14 +843,12 @@ async def end_process(data: dict[str, Any], ctx: "Config", **_):
     if append_tag:
         tag_parts.append(append_tag)
     
-    # 如果没有任何正向提示词，则使用默认值
-    if tag_parts:
-        data["tag"] = ", ".join(tag_parts)
-    else:
-        data["tag"] = ctx.defaults.prompt
+    data["tag"] = deduplicate_tags(", ".join(tag_parts)) if tag_parts else ""
     
     # 拼接负面提示词：prepend_negative + negative + append_negative
     negative_parts = []
+    if ctx.defaults.negative_prompt:
+        negative_parts.append(ctx.defaults.negative_prompt)
     if prepend_negative:
         negative_parts.append(prepend_negative)
     if data.get("negative", "").strip():
@@ -855,11 +856,7 @@ async def end_process(data: dict[str, Any], ctx: "Config", **_):
     if append_negative:
         negative_parts.append(append_negative)
     
-    # 如果没有任何负面提示词，则使用默认值
-    if negative_parts:
-        data["negative"] = ", ".join(negative_parts)
-    else:
-        data["negative"] = ctx.defaults.negative_prompt
+    data["negative"] = deduplicate_tags(", ".join(negative_parts)) if negative_parts else ""
     
     # 填充其他默认值
     complete_defaults(data, ctx)
