@@ -432,7 +432,6 @@ class STNaiGenerateImageTool(ConfigNeededTool):
                 i2i_image,
                 vibe_transfer_images,
                 vision_images=vision_images,
-                token=self.token_getter() if hasattr(self, 'token_getter') and self.token_getter else "",
                 client_getter=self.client_getter,
             )
         except ReturnToLLMError as e:
@@ -504,7 +503,6 @@ class Plugin(Star):
             STNaiGenerateImageTool(
                 config_init=self.config,
                 client_getter_init=self.get_http_client,
-                token_getter_init=self._get_next_token,
             )
         )
 

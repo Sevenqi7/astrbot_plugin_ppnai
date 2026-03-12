@@ -45,14 +45,12 @@ def get_size_from_config(config: Config, orientation: OrientationType) -> str:
 class ConfigNeededTool(FunctionTool[AstrAgentContext]):
     config_init: Config | None = None
     client_getter_init: Any | None = None
-    token_getter_init: Any | None = None
 
     def __post_init__(self):
         if not self.config_init:
             raise ValueError("config not provided")
         self.config = self.config_init
         self.client_getter = self.client_getter_init
-        self.token_getter = self.token_getter_init
 
 
 class ReturnToLLMError(Exception):
@@ -170,7 +168,6 @@ async def llm_generate_image(
     vision_images: list[Any] | None = None,
     skip_default_prompts: bool = False,
     token: str = "",
-    client_getter: Any | None = None,
 ):
     """
     使用 LLM 生成高级参数并生成图片
@@ -197,7 +194,7 @@ async def llm_generate_image(
     )
 
     try:
-        return await wrapped_generate(req, config, token=token, client_getter=client_getter)
+        return await wrapped_generate(req, config, token=token)
     except Exception as e:
         logger.debug("Failed to generate image", exc_info=e)
         raise ReturnToLLMError(
