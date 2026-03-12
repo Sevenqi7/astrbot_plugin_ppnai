@@ -168,6 +168,7 @@ async def llm_generate_image(
     vision_images: list[Any] | None = None,
     skip_default_prompts: bool = False,
     token: str = "",
+    client_getter: Any | None = None,
 ):
     """
     使用 LLM 生成高级参数并生成图片
@@ -181,6 +182,7 @@ async def llm_generate_image(
         vibe_transfer_images: 氛围转移的图片列表
         skip_default_prompts: 是否跳过默认前置/后置提示词（使用预设时为 True）
         token: 使用的 Token
+        client_getter: 获取 HTTP 客户端的函数
     """
     req = await llm_generate_advanced_req(
         instructions=instructions,
@@ -194,13 +196,14 @@ async def llm_generate_image(
     )
 
     try:
-        return await wrapped_generate(req, config, token=token)
+        if token:
+            req.token = token
+        return await wrapped_generate(req, config, token=token, client_getter=client_getter)
     except Exception as e:
         logger.debug("Failed to generate image", exc_info=e)
         raise ReturnToLLMError(
             f"Failed to generate image: \n{format_readable_error(e)}"
         ) from e
-
 
 async def llm_generate_advanced_req(
     instructions: str,
